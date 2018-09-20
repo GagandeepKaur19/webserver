@@ -14,7 +14,18 @@ if __name__=='__main__':
 
 
 
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+    <title>My title</title>
+</head>
+
+<body>
+    <p>Flask </p>
+</body>
+
+</html>
 
 from flask import Flask, render_template
 app = Flask(__name__)
@@ -89,3 +100,51 @@ from todoapp import app
 from models import d
 
 db.create_all()
+
+
+from models import Category
+work = Category(name=u'work')
+home = Category(name=u’home’)
+ 
+db.session.add(work)
+db.session.add(home)
+db.session.commit()
+
+from models import Priority
+ 
+high = Priority(name=u’high’, value=3)
+medium = Priority(name=u’medium’, value=2)
+low = Priority(name=u’low’, value=1)
+ 
+db.session.add(high)
+db.session.add(medium)
+db.session.add(low)
+db.session.commit()
+
+from flask import render_template, request
+from models import Category, Todo, Priority, db
+ 
+@app.route('/')
+def list_all():
+   return render_template(
+       'list.html',
+       categories=Category.query.all(),
+       todos=Todo.query.join(Priority).order_by(Priority.value.desc())
+
+@app.route('/new-task', methods=['POST'])
+def new():
+   if request.method == 'POST':
+       category = Category.query.filter_by(id=request.form['category']).first()
+       priority = Priority.query.filter_by(id=request.form['priority']).first()
+       todo = Todo(category, priority, request.form['description'])
+       db.session.add(todo)
+       db.session.commit()
+       return redirect('/')
+   else:
+       return render_template(
+           'new-task.html',
+           page='new-task',
+           categories=Category.query.all(),
+           priorities=Priority.query.all()
+       )
+
